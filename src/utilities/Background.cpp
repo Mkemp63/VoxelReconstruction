@@ -40,9 +40,8 @@ namespace nl_uu_science_gmt
                     if (!cap.isOpened())
                         cerr << "Error opening video \n";
 
-                    // Select 10 frames
                     default_random_engine gen;
-                    uniform_int_distribution<int>distribution(0,
+                    uniform_int_distribution<int>dist(0,
                         cap.get(CAP_PROP_FRAME_COUNT));
 
                     vector<Mat> frames;
@@ -52,7 +51,7 @@ namespace nl_uu_science_gmt
                     // take frames from video
                     for (int i = 0; i < nFrames; i++)
                     {
-                        int x = distribution(gen);
+                        int x = dist(gen);
                         cap.set(CAP_PROP_POS_FRAMES, x);
                         Mat frame;
                         cap >> frame;
@@ -79,11 +78,11 @@ namespace nl_uu_science_gmt
         }
     }
 
-    int Background::computeMedian(vector<int> elements)
+    int Background::computeMedian(vector<int> channel)
     {
-        nth_element(elements.begin(), elements.begin() + elements.size() / 2, elements.end());
+        nth_element(channel.begin(), channel.begin() + channel.size() / 2, channel.end());
 
-        return elements[elements.size() / 2];
+        return channel[channel.size() / 2];
     }
 
     cv::Mat Background::compute_median(vector<Mat> vec)
@@ -94,9 +93,9 @@ namespace nl_uu_science_gmt
         {
             for (int col = 0; col < vec[0].cols; col++)
             {
-                vector<int> elements_B;
-                vector<int> elements_G;
-                vector<int> elements_R;
+                vector<int> channel_B;
+                vector<int> channel_G;
+                vector<int> channel_R;
 
                 for (int imgNumber = 0; imgNumber < vec.size(); imgNumber++)
                 {
@@ -104,14 +103,14 @@ namespace nl_uu_science_gmt
                     int G = vec[imgNumber].at<cv::Vec3b>(row, col)[1];
                     int R = vec[imgNumber].at<cv::Vec3b>(row, col)[2];
 
-                    elements_B.push_back(B);
-                    elements_G.push_back(G);
-                    elements_R.push_back(R);
+                    channel_B.push_back(B);
+                    channel_G.push_back(G);
+                    channel_R.push_back(R);
                 }
 
-                medianImg.at<Vec3b>(row, col)[0] = computeMedian(elements_B);
-                medianImg.at<Vec3b>(row, col)[1] = computeMedian(elements_G);
-                medianImg.at<Vec3b>(row, col)[2] = computeMedian(elements_R);
+                medianImg.at<Vec3b>(row, col)[0] = computeMedian(channel_B);
+                medianImg.at<Vec3b>(row, col)[1] = computeMedian(channel_G);
+                medianImg.at<Vec3b>(row, col)[2] = computeMedian(channel_R);
             }
         }
         return medianImg;

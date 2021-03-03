@@ -257,7 +257,7 @@ bool Camera::detExtrinsics(
 		cap >> frame;
 	assert(!frame.empty());
 
-	m_BoardCorners = new vector<Point>(); //A pointer because we need access to it from static function onMouse
+	m_BoardCorners = new vector<Point>(); // A pointer because we need access to it from static function onMouse
 
 	string corners_file = data_path + General::CheckerboadCorners;
 	if (General::fexists(corners_file))

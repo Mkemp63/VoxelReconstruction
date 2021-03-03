@@ -12,11 +12,13 @@
 #include <opencv2/core/types_c.h>
 #include <cassert>
 #include <iostream>
-
+#include <chrono>
+#include <thread>
 #include "../utilities/General.h"
 
 using namespace std;
 using namespace cv;
+
 
 namespace nl_uu_science_gmt
 {
@@ -95,18 +97,23 @@ void Reconstructor::initialize()
 
 	int z;
 	int pdone = 0;
-#pragma omp parallel for schedule(static) private(z) shared(pdone)
+	// timing to compare performance
+	auto t1 = std::chrono::high_resolution_clock::now();
+
+	// OpenMP statement
+#pragma omp parallel for schedule(static) private(pdone) collapse(3) 
 	for (z = zL; z < zR; z += m_step)
 	{
 		const int zp = (z - zL) / m_step;
 		int done = cvRound((zp * plane / (double) m_voxels_amount) * 100.0);
 
-#pragma omp critical
-		if (done > pdone)
-		{
-			pdone = done;
-			cout << done << "%..." << flush;
-		}
+//this takes a few seconds, for some reason. So commented out
+//#pragma omp critical
+//		if (done > pdone)
+//		{
+//			pdone = done;
+//			cout << done << "%..." << flush;
+//		}
 
 		int y, x;
 		for (y = yL; y < yR; y += m_step)
@@ -144,8 +151,11 @@ void Reconstructor::initialize()
 			}
 		}
 	}
-
+	// more timing stuff
+	auto t2 = std::chrono::high_resolution_clock::now();
 	cout << "done!" << endl;
+	auto ms_int = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1);
+	std::cout << ms_int.count() << "ms\n";
 }
 
 /**
@@ -159,7 +169,7 @@ void Reconstructor::update()
 	std::vector<Voxel*> visible_voxels;
 
 	int v;
-#pragma omp parallel for schedule(static) private(v) shared(visible_voxels)
+#pragma omp parallel for schedule(static) private(v) shared(visible_voxels) collapse(2)
 	for (v = 0; v < (int) m_voxels_amount; ++v)
 	{
 		int camera_counter = 0;

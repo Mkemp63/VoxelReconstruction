@@ -116,6 +116,9 @@ bool Scene3DRenderer::processFrame()
 	return true;
 }
 
+
+
+
 /**
  * Separate the background from the foreground
  * ie.: Create an 8 bit image where only the foreground of the scene is white (255)
@@ -145,12 +148,15 @@ void Scene3DRenderer::processForeground(
 	threshold(tmp, background, m_v_threshold, 255, CV_THRESH_BINARY);
 	bitwise_or(foreground, background, foreground);
 
-	// erodation and dilation
-	erode(foreground, foreground, getStructuringElement(MORPH_ELLIPSE, Size(2, 2)));
-	dilate(foreground, foreground, getStructuringElement(MORPH_ELLIPSE, Size(2, 2)));
+	// structuring elements 
+	Mat s_element_2 = getStructuringElement(MORPH_ELLIPSE, Size(2, 2));
+	Mat s_element_5 = getStructuringElement(MORPH_ELLIPSE, Size(5, 5));
 
-	erode(foreground, foreground, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)));
-	dilate(foreground, foreground, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)));
+	// erodation and dilation (opening)
+	morphologyEx(foreground, foreground, MORPH_OPEN, s_element_2);
+
+	// dilation and erosion (closing)
+	morphologyEx(foreground, foreground, MORPH_CLOSE, s_element_5);
 
 	// Improve the foreground image
 	camera->setForegroundImage(foreground);
